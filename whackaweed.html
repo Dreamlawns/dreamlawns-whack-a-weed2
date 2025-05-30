@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Whack A Weed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        #game-container {
+            width: 800px;
+            height: 500px;
+            border: 2px solid green;
+            margin: 20px auto;
+            /* === NEW: Lawn Image Background === */
+            background: url('grasslawn.png') center center / cover no-repeat;
+            /* 'center center' positions the image in the middle of the container */
+            /* 'cover' ensures the image covers the entire container, scaling if necessary */
+            /* 'no-repeat' prevents the image from tiling */
+            /* You can remove 'background-color: #7CFC00;' as it's now covered by the image */
+            /* ================================= */
+            position: relative;
+            overflow: hidden;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"><circle cx="15" cy="15" r="10" fill="transparent" stroke="black" stroke-width="2"/></svg>') 15 15, auto; /* Custom crosshair cursor */
+        }
+        .dandelion {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3); /* Add a subtle shadow for better visibility */
+            transition: transform 0.1s ease-out; /* For pop effect */
+        }
+        .dandelion:active {
+            transform: scale(0.8); /* Shrink on click */
+        }
+        #score-board {
+            margin-top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        #start-button {
+            padding: 10px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        #start-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Whack A Weed</h1>
+    <div id="score-board">
+        Score: <span id="current-score">0</span> | High Score: <span id="high-score">0</span>
+    </div>
+    <div id="game-container"></div>
+    <button id="start-button">Start Game</button>
+
+    <script>
+        // ... (JavaScript remains the same as your previous version with multiple weeds) ...
+        const gameContainer = document.getElementById('game-container');
+        const currentScoreSpan = document.getElementById('current-score');
+        const highScoreSpan = document.getElementById('high-score');
+        const startButton = document.getElementById('start-button');
+
+        let score = 0;
+        let highScore = localStorage.getItem('weedPoppingHighScore') || 0;
+        let gameTimer;
+        let dandelionPopInterval;
+        let gameActive = false;
+
+        highScoreSpan.textContent = highScore;
+
+        const weedImages = [
+            'dandelion.png',
+            'henbit.png',
+            'clover.png'
+        ];
+
+        function createDandelion() {
+            if (!gameActive) return;
+
+            const weed = document.createElement('div');
+            weed.classList.add('dandelion');
+
+            const randomIndex = Math.floor(Math.random() * weedImages.length);
+            const selectedImage = weedImages[randomIndex];
+            weed.style.backgroundImage = `url('${selectedImage}')`;
+
+            const x = Math.random() * (gameContainer.clientWidth - 50);
+            const y = Math.random() * (gameContainer.clientHeight - 50);
+            weed.style.left = `${x}px`;
+            weed.style.top = `${y}px`;
+
+            weed.addEventListener('click', () => {
+                if (gameActive) {
+                    score++;
+                    currentScoreSpan.textContent = score;
+                    weed.remove();
+                }
+            });
+
+            gameContainer.appendChild(weed);
+
+            setTimeout(() => {
+                if (weed.parentNode === gameContainer) {
+                    weed.remove();
+                }
+            }, 1500);
+        }
+
+        function startGame() {
+            score = 0;
+            currentScoreSpan.textContent = score;
+            gameActive = true;
+            startButton.disabled = true;
+            gameContainer.innerHTML = '';
+
+            dandelionPopInterval = setInterval(createDandelion, 700);
+
+            let timeLeft = 20;
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(dandelionPopInterval);
+            clearInterval(gameTimer);
+            startButton.disabled = false;
+            gameContainer.innerHTML = '';
+
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('weedPoppingHighScore', highScore);
+                highScoreSpan.textContent = highScore;
+                alert(`Game Over! New High Score: ${highScore}`);
+            } else {
+                alert(`Game Over! Your Score: ${score}`);
+            }
+        }
+
+        startButton.addEventListener('click', startGame);
+    </script>
+</body>
+</html>
